@@ -1,7 +1,10 @@
 fastapi
-uvicorn
+uvicorn[standard]
 python-multipart
+python-dotenv
+groq
+scikit-learn
 numpy
 pandas
-scikit-learn
+matplotlib
 lightkurve
