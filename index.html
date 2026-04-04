@@ -1,97 +1,429 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>AI Time Series Anomaly Detection</title>
-    <link rel="stylesheet" href="style.css">
-    <script src="https://cdn.plot.ly/plotly-2.35.2.min.js"></script>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="description" content="Ignite: Research-grade AI-driven time-series anomaly detection platform. Analyze exoplanet datasets or upload CSVs for automated insights." />
+  <title>&#128293;Ignite - AI Anomaly Detection</title>
+  <link rel="icon" href="favicon.svg" type="image/svg+xml" />
+  <link rel="stylesheet" href="style.css" />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet" />
+  <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
 </head>
-<body>
-    <div class="page-shell">
-        <header class="hero-card">
-            <p class="eyebrow">IGNITE🔥</p>
-            <h1>AI Time Series Anomaly Detection Platform</h1>
-            <p class="hero-copy">
-                Upload CSV datasets or select an exoplanet dataset, run Isolation Forest anomaly detection,
-                visualize time-series behavior, highlight anomalies, and export results.
-            </p>
-        </header>
+<body id="top">
+  <canvas id="nebula"></canvas>
 
-        <main class="dashboard-grid">
-            <section class="card">
-                <h2>Upload CSV</h2>
-                <p class="section-copy">Use the same detection logic as <code>test2.py</code> on the first numeric column.</p>
-                <input id="csvFile" type="file" accept=".csv">
-                <div class="button-row">
-                    <button id="uploadButton" type="button">Upload CSV</button>
-                    <button id="detectCsvButton" type="button">Detect CSV</button>
-                </div>
-                <p id="uploadStatus" class="status-text">No file selected.</p>
-            </section>
-
-            <section class="card">
-                <h2>Select Exoplanet</h2>
-                <p class="section-copy">Runs Lightkurve download, anomaly detection, and transit dip highlighting.</p>
-                <select id="planetSelect">
-                    <option value="K2-18b">K2-18b</option>
-                    <option value="Kepler-10b">Kepler-10b</option>
-                    <option value="Kepler-22b">Kepler-22b</option>
-                    <option value="Kepler-452b">Kepler-452b</option>
-                    <option value="WASP-12b">WASP-12b</option>
-                    <option value="HAT-P-7b">HAT-P-7b</option>
-                </select>
-                <button id="detectPlanetButton" type="button">Run Detection</button>
-                <p id="planetStatus" class="status-text">Choose a planet and start detection.</p>
-            </section>
-
-            <section class="card">
-                <h2>Detection Parameters</h2>
-                <p class="section-copy">Contamination controls how many anomalies Isolation Forest expects.</p>
-                <label for="contaminationSlider">Contamination: <span id="contaminationValue">0.01</span></label>
-                <input id="contaminationSlider" type="range" min="0.01" max="0.2" step="0.01" value="0.01">
-                <p class="status-text">Range: 0.01 to 0.2</p>
-            </section>
-
-            <section class="card card-wide">
-                <div class="section-header">
-                    <div>
-                        <h2>Visualization</h2>
-                        <p class="section-copy">Blue line for source data, red for anomalies, green for transit dips.</p>
-                    </div>
-                    <button id="downloadButton" type="button">Download Results</button>
-                </div>
-                <div id="graph" class="graph-panel"></div>
-            </section>
-
-            <section class="card card-wide">
-                <h2>Results</h2>
-                <div id="results" class="results-grid">
-                    <div class="result-item">
-                        <span class="result-label">Anomalies detected</span>
-                        <strong id="anomaliesCount">0</strong>
-                    </div>
-                    <div class="result-item">
-                        <span class="result-label">Transit dips detected</span>
-                        <strong id="transitCount">No data</strong>
-                    </div>
-                    <div class="result-item">
-                        <span class="result-label">Dataset size</span>
-                        <strong id="datasetSize">0 rows</strong>
-                    </div>
-                    <div class="result-item">
-                        <span class="result-label">Status</span>
-                        <strong id="resultStatus">Waiting for detection</strong>
-                    </div>
-                </div>
-            </section>
-        </main>
-
-        <footer class="footer">
-            <p>Team Ignite | Hackathon Demo Build</p>
-        </footer>
+  <header class="topbar">
+    <div class="topbar-left">
+      <div class="logo">
+        <svg width="28" height="28" viewBox="0 0 28 28" fill="none" aria-hidden="true">
+          <rect x="4" y="5" width="20" height="18" rx="6" stroke="#4f46e5" stroke-width="1.5"/>
+          <path d="M8 17.5L11.5 14L14.25 16.75L20 11" stroke="#4f46e5" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/>
+          <circle cx="20" cy="11" r="1.7" fill="#4f46e5"/>
+        </svg>
+        <div>
+          <span>&#128293;Ignite</span>
+          <small>AI anomaly detection workspace</small>
+        </div>
+      </div>
+      <div class="topbar-pill" id="mission-pill">
+        <span class="pill-dot"></span>
+        <span id="mission-text">No dataset loaded</span>
+      </div>
     </div>
+    <nav class="topbar-nav">
+      <button class="nav-btn active" data-view="exoplanet">Exoplanet</button>
+      <button class="nav-btn" data-view="csv">CSV</button>
+      <button class="nav-btn" data-view="chat">AI Chat</button>
+    </nav>
+  </header>
 
-    <script src="script.js"></script>
+  <main id="view-exoplanet" class="view active">
+    <section class="hero-shell">
+      <div class="hero-copy">
+        <div class="eyebrow">Research-grade anomaly detection</div>
+        <h1>AI-Driven Anomaly Detection for Scientific Data</h1>
+        <p class="hero-text">
+          Analyze time-series datasets, detect anomalies, and generate AI-assisted scientific insights.
+        </p>
+        <div class="hero-actions">
+          <a class="primary-cta" href="#workspace">Open workspace</a>
+          <p class="hero-note">Supports CSV analysis, exoplanet light curves, AI summaries, and dataset-aware chat.</p>
+        </div>
+      </div>
+      <div class="hero-visual">
+        <div class="preview-panel">
+          <div class="preview-header">
+            <span>Active workflow</span>
+            <span>Transit anomaly review</span>
+          </div>
+          <div class="preview-chart">
+            <span class="preview-grid"></span>
+            <span class="preview-line"></span>
+            <span class="preview-point point-a"></span>
+            <span class="preview-point point-b"></span>
+            <span class="preview-point point-c"></span>
+          </div>
+          <div class="preview-metrics">
+            <div>
+              <strong>12,492</strong>
+              <span>observations scanned</span>
+            </div>
+            <div>
+              <strong>18</strong>
+              <span>candidate anomalies</span>
+            </div>
+            <div>
+              <strong>2</strong>
+              <span>transit dips highlighted</span>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <section class="info-grid">
+      <article class="info-card">
+        <p class="section-tag">Features</p>
+        <h2>Core analysis tools</h2>
+        <div class="feature-list">
+          <div class="feature-item">
+            <span class="feature-icon"></span>
+            <div>
+              <h3>CSV anomaly detection</h3>
+              <p>Upload datasets and automatically detect unusual patterns.</p>
+            </div>
+          </div>
+          <div class="feature-item">
+            <span class="feature-icon"></span>
+            <div>
+              <h3>Exoplanet transit detection</h3>
+              <p>Analyze light curves and identify potential transit events.</p>
+            </div>
+          </div>
+          <div class="feature-item">
+            <span class="feature-icon"></span>
+            <div>
+              <h3>AI scientific summaries</h3>
+              <p>Generate interpretable insights using large language models.</p>
+            </div>
+          </div>
+          <div class="feature-item">
+            <span class="feature-icon"></span>
+            <div>
+              <h3>Dataset-aware chat</h3>
+              <p>Ask questions about your dataset and anomalies.</p>
+            </div>
+          </div>
+          <div class="feature-item">
+            <span class="feature-icon"></span>
+            <div>
+              <h3>Minimal visualization</h3>
+              <p>Clear plots designed for analysis, not decoration.</p>
+            </div>
+          </div>
+        </div>
+      </article>
+
+      <article class="info-card">
+        <p class="section-tag">How it works</p>
+        <h2>Simple analysis flow</h2>
+        <div class="steps-list">
+          <div class="step-item">
+            <span class="step-num">01</span>
+            <div>
+              <h3>Load dataset</h3>
+              <p>Upload CSV or select exoplanet dataset.</p>
+            </div>
+          </div>
+          <div class="step-item">
+            <span class="step-num">02</span>
+            <div>
+              <h3>Detect anomalies</h3>
+              <p>Isolation Forest identifies unusual patterns.</p>
+            </div>
+          </div>
+          <div class="step-item">
+            <span class="step-num">03</span>
+            <div>
+              <h3>Analyze with AI</h3>
+              <p>Groq AI generates insights and explanations.</p>
+            </div>
+          </div>
+        </div>
+      </article>
+    </section>
+
+    <section class="product-preview">
+      <div class="preview-copy">
+        <p class="section-tag">Product preview</p>
+        <h2>Scientific interface for anomaly review</h2>
+        <p>
+          Explore anomalies, detect patterns, and interpret results using a clean scientific interface designed for
+          clarity and precision.
+        </p>
+      </div>
+      <div class="trust-strip">
+        <span>CSV time-series analysis</span>
+        <span>Exoplanet light-curve review</span>
+        <span>AI-assisted interpretation</span>
+      </div>
+    </section>
+
+    <section id="workspace" class="workspace-shell">
+      <div class="workspace-head">
+        <div>
+          <p class="section-tag">Workspace</p>
+          <h2>Exoplanet analysis dashboard</h2>
+        </div>
+        <p class="workspace-note">Search a target, choose a telescope, run detection, then inspect summaries and charts.</p>
+      </div>
+
+      <div class="workspace-grid">
+        <aside class="sidebar">
+          <div class="sidebar-section">
+            <p class="sidebar-label">Search Target</p>
+            <div class="search-row">
+              <input id="planet-search" type="text" placeholder="e.g. TRAPPIST-1e..." autocomplete="off" />
+              <button id="btn-search" class="icon-btn" title="Search">
+                <svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                  <circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/>
+                </svg>
+              </button>
+            </div>
+            <div id="search-results" class="search-results hidden"></div>
+          </div>
+
+          <div class="sidebar-section">
+            <p class="sidebar-label">Quick Select</p>
+            <div id="planet-cards" class="planet-cards"></div>
+          </div>
+        </aside>
+
+        <div class="content-area">
+          <div class="controls-bar">
+            <div class="control-group">
+              <label class="ctrl-label">Telescope</label>
+              <select id="telescope-select" class="ctrl-select"></select>
+            </div>
+            <div class="control-group">
+              <label class="ctrl-label">Selected</label>
+              <div id="selected-planet-display" class="selected-pill">None selected</div>
+            </div>
+            <div class="control-group toggle-group">
+              <label class="ctrl-label">Transit Regions</label>
+              <label class="toggle">
+                <input type="checkbox" id="transit-toggle" checked />
+                <span class="toggle-track"><span class="toggle-thumb"></span></span>
+              </label>
+            </div>
+            <button id="btn-run-exoplanet" class="run-btn" disabled>
+              <span class="run-btn-inner">
+                <svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2.2" viewBox="0 0 24 24"><polygon points="5 3 19 12 5 21 5 3"/></svg>
+                Run Detection
+              </span>
+              <span class="run-progress"></span>
+            </button>
+          </div>
+
+          <div id="exoplanet-results" class="results-zone hidden">
+            <div id="exo-stats" class="stats-row"></div>
+
+            <div class="plot-tabs">
+              <button class="plot-tab active" data-plot="full">Full Light Curve</button>
+              <button class="plot-tab" data-plot="transit" id="transit-tab-btn">Transit Zoom</button>
+              <button class="plot-tab" data-plot="interactive">Interactive</button>
+            </div>
+
+            <div id="plot-full" class="plot-panel active">
+              <div class="plot-img-wrap">
+                <img id="img-full" src="" alt="Light curve" />
+                <a id="dl-full" class="dl-btn" download="lightcurve.png">Download</a>
+              </div>
+            </div>
+
+            <div id="plot-transit" class="plot-panel hidden">
+              <div class="plot-img-wrap">
+                <img id="img-transit" src="" alt="Transit zoom" />
+                <a id="dl-transit" class="dl-btn" download="transit_zoom.png">Download</a>
+              </div>
+              <p id="no-transit-msg" class="dim-note hidden">No transit zoom available for this dataset.</p>
+            </div>
+
+            <div id="plot-interactive" class="plot-panel hidden">
+              <div class="chart-wrap">
+                <canvas id="interactiveChart"></canvas>
+              </div>
+              <p class="dim-note">Hover over points to see values. Scroll to zoom.</p>
+            </div>
+
+            <div class="ai-card" id="exo-ai-card">
+              <div class="ai-card-header">
+                <span class="ai-icon">AI</span> Analysis
+              </div>
+              <div class="ai-card-body markdown-body" id="exo-ai-body"></div>
+            </div>
+          </div>
+
+          <div id="exo-loading" class="loading-overlay hidden">
+            <div class="loading-orb"></div>
+            <p id="loading-text" class="loading-text">Contacting telescope...</p>
+            <p class="loading-sub">Fetching light curve data</p>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <section class="social-proof">
+      <div class="proof-card">
+        <p class="section-tag">Project scope</p>
+        <blockquote>
+          Ignite supports anomaly discovery across uploaded CSV datasets and exoplanet transit observations.
+        </blockquote>
+        <p class="proof-meta">Results include statistical flags, plot exports, interactive inspection, and AI-generated summaries.</p>
+      </div>
+    </section>
+  </main>
+
+  <main id="view-csv" class="view hidden">
+    <section class="tool-shell">
+      <div class="tool-header">
+        <div>
+          <p class="section-tag">CSV workflow</p>
+          <h1>Upload a dataset and inspect anomalies with the same analysis pipeline.</h1>
+        </div>
+        <p class="tool-note">Use the existing CSV flow to run detection, compare plots, and review AI interpretation.</p>
+      </div>
+
+      <div class="content-area solo">
+        <div class="upload-panel">
+          <div class="upload-zone" id="upload-zone">
+            <input type="file" id="csv-file" accept=".csv" hidden />
+            <div class="upload-icon-wrap">
+              <svg width="36" height="36" fill="none" stroke="#4f46e5" stroke-width="1.4" viewBox="0 0 24 24">
+                <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/>
+                <polyline points="17 8 12 3 7 8"/>
+                <line x1="12" y1="3" x2="12" y2="15"/>
+              </svg>
+            </div>
+            <p class="upload-title">Drop CSV here</p>
+            <p class="upload-sub">or <span class="link" id="upload-trigger">browse files</span></p>
+            <p id="file-name-display" class="file-chosen"></p>
+          </div>
+
+          <div id="col-row" class="control-group hidden" style="margin-top:1rem;">
+            <label class="ctrl-label">Column</label>
+            <select id="col-select" class="ctrl-select"></select>
+          </div>
+
+          <button id="btn-run-csv" class="run-btn" disabled style="margin-top:1rem;">
+            <span class="run-btn-inner">
+              <svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2.2" viewBox="0 0 24 24"><polygon points="5 3 19 12 5 21 5 3"/></svg>
+              Run Detection
+            </span>
+            <span class="run-progress"></span>
+          </button>
+        </div>
+
+        <div id="csv-results" class="results-zone hidden">
+          <div id="csv-stats" class="stats-row"></div>
+
+          <div class="plot-tabs">
+            <button class="plot-tab active" data-plot="csv-full">Plot</button>
+            <button class="plot-tab" data-plot="csv-interactive">Interactive</button>
+          </div>
+
+          <div id="plot-csv-full" class="plot-panel active">
+            <div class="plot-img-wrap">
+              <img id="img-csv" src="" alt="CSV plot" />
+              <a id="dl-csv" class="dl-btn" download="anomaly_detection.png">Download</a>
+            </div>
+          </div>
+
+          <div id="plot-csv-interactive" class="plot-panel hidden">
+            <div class="chart-wrap">
+              <canvas id="csvChart"></canvas>
+            </div>
+          </div>
+
+          <div class="ai-card">
+            <div class="ai-card-header"><span class="ai-icon">AI</span> Analysis</div>
+            <div class="ai-card-body markdown-body" id="csv-ai-body"></div>
+          </div>
+        </div>
+
+        <div id="csv-loading" class="loading-overlay hidden">
+          <div class="loading-orb"></div>
+          <p class="loading-text">Analyzing dataset...</p>
+          <p class="loading-sub">Running Isolation Forest</p>
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <main id="view-chat" class="view hidden">
+    <section class="tool-shell">
+      <div class="tool-header">
+        <div>
+          <p class="section-tag">Dataset chat</p>
+          <h1>Ask follow-up questions and review markdown-formatted AI responses.</h1>
+        </div>
+        <p class="tool-note">Chat uses the existing backend context behavior and stays aligned with your latest loaded dataset.</p>
+      </div>
+
+      <div class="content-area solo">
+        <div class="chat-shell">
+          <div class="chat-topbar">
+            <div>
+              <p class="sidebar-label" style="margin:0">Groq AI - LLaMA 3.3 70B</p>
+              <p id="chat-ctx-line" class="dim-note" style="margin-top:3px">No dataset loaded</p>
+            </div>
+            <button id="btn-clear-chat" class="icon-btn ghost">
+              <svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                <polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14H6L5 6"/><path d="M10 11v6m4-6v6"/>
+              </svg>
+              Clear
+            </button>
+          </div>
+
+          <div id="chat-messages" class="chat-messages">
+            <div class="chat-intro">
+              <p>Ask about anomalies, transit dips, exoplanet science, or your loaded dataset.</p>
+              <p class="dim-note" style="margin-top:.4rem">Type <kbd>exit</kbd> or <kbd>back</kbd> to clear input</p>
+            </div>
+          </div>
+
+          <div class="chat-input-area">
+            <textarea id="chat-input" rows="2" placeholder="Ask a question about your dataset or exoplanet science..."></textarea>
+            <button id="btn-send" class="send-btn">
+              <svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24">
+                <line x1="22" y1="2" x2="11" y2="13"/><polygon points="22 2 15 22 11 13 2 9 22 2"/>
+              </svg>
+            </button>
+          </div>
+          <p class="dim-note chat-help">
+            <kbd>Ctrl+Enter</kbd> to send
+          </p>
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <footer class="site-footer">
+    <div>
+      <strong>AI Time-Series Anomaly Detection</strong>
+      <span>Built for scientific data exploration and anomaly discovery.</span>
+    </div>
+    <div class="footer-links">
+      <a href="#top">Overview</a>
+      <a href="#workspace">Workspace</a>
+      <a href="#top">Research notes</a>
+    </div>
+  </footer>
+
+  <script src="app.js"></script>
 </body>
 </html>
