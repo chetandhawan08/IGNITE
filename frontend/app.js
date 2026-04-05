@@ -55,6 +55,9 @@
   requestAnimationFrame(draw);
 })();
 
+const API_BASE_URL = "https://ignite-ccyz.onrender.com";
+const apiUrl = (path) => `${API_BASE_URL}${path}`;
+
 
 document.querySelectorAll(".nav-btn").forEach((btn) => {
   btn.addEventListener("click", () => {
@@ -241,8 +244,8 @@ let selectedAuthor = null;
 let exoChart = null;
 
 Promise.all([
-  fetch("/api/planets").then((r) => r.json()),
-  fetch("/api/telescopes").then((r) => r.json()),
+  fetch(apiUrl("/api/planets")).then((r) => r.json()),
+  fetch(apiUrl("/api/telescopes")).then((r) => r.json()),
 ]).then(([{ planets }, { telescopes }]) => {
   const container = document.getElementById("planet-cards");
   planets.forEach((p) => {
@@ -292,7 +295,7 @@ async function doSearch() {
   resultsBox.classList.remove("hidden");
 
   try {
-    const res = await fetch(`/api/search?target=${encodeURIComponent(query)}`);
+    const res = await fetch(apiUrl(`/api/search?target=${encodeURIComponent(query)}`));
     const data = await res.json();
 
     if (!res.ok) {
@@ -380,7 +383,7 @@ document.getElementById("btn-run-exoplanet").addEventListener("click", async () 
     if (selectedAuthor) body.append("author_override", selectedAuthor);
     body.append("show_transit_regions", showTransit ? "true" : "false");
 
-    const res = await fetch("/api/exoplanet", { method: "POST", body });
+    const res = await fetch(apiUrl("/api/exoplanet"), { method: "POST", body });
     const data = await res.json();
 
     if (!res.ok) {
@@ -505,7 +508,7 @@ btnRunCsv.addEventListener("click", async () => {
     const colIdx = document.getElementById("col-select").selectedIndex;
     body.append("column_index", Math.max(0, colIdx));
 
-    const res = await fetch("/api/csv", { method: "POST", body });
+    const res = await fetch(apiUrl("/api/csv"), { method: "POST", body });
     const data = await res.json();
 
     if (!res.ok) {
@@ -607,7 +610,7 @@ async function sendChat() {
   const thinking = appendThinking();
 
   try {
-    const res = await fetch("/api/chat", {
+    const res = await fetch(apiUrl("/api/chat"), {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ message: msg }),
@@ -631,7 +634,7 @@ chatInput.addEventListener("keydown", (e) => {
 });
 
 document.getElementById("btn-clear-chat").addEventListener("click", async () => {
-  await fetch("/api/chat/clear", { method: "POST" });
+  await fetch(apiUrl("/api/chat/clear"), { method: "POST" });
   chatMessages.innerHTML = `
     <div class="chat-intro">
       <p>Ask about anomalies, transit dips, exoplanet science, or your loaded dataset.</p>
@@ -639,7 +642,7 @@ document.getElementById("btn-clear-chat").addEventListener("click", async () => 
     </div>`;
 });
 
-fetch("/api/chat/context")
+fetch(apiUrl("/api/chat/context"))
   .then((r) => r.json())
   .then(({ source }) => {
     if (source) {
