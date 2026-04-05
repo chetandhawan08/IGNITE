@@ -3,17 +3,25 @@ try:
 except ImportError:
     Groq = None
 
+import os
+
 from .config import GROQ_API_KEY, last_dataset_context
 
-client = Groq(api_key=GROQ_API_KEY) if Groq is not None and GROQ_API_KEY else None
+
+def get_groq_client():
+    api_key = os.getenv("GROQ_API_KEY") or GROQ_API_KEY
+    if Groq is None or not api_key:
+        return None
+    return Groq(api_key=api_key)
 
 
 def ai_summarize(summary_dict):
+    client = get_groq_client()
     if client is None:
-        if Groq is not None and not GROQ_API_KEY:
+        if Groq is not None and not (os.getenv("GROQ_API_KEY") or GROQ_API_KEY):
             return (
                 "AI summarization is unavailable because GROQ_API_KEY is not set. "
-                "Add it to backend/.env or your environment."
+                "Set it in your environment, or in Render's Environment settings for the deployed app."
             )
         return (
             "AI summarization is unavailable because the Groq SDK is not installed. "
@@ -44,6 +52,7 @@ Provide:
 
 
 def ai_chat(user_message, conversation_history):
+    client = get_groq_client()
     dataset_context = ""
     if last_dataset_context["data"] is not None:
         dataset_context = f"""
@@ -60,10 +69,10 @@ interpret anomalies, and explain astrophysics concepts clearly.
 {dataset_context}"""
 
     if client is None:
-        if Groq is not None and not GROQ_API_KEY:
+        if Groq is not None and not (os.getenv("GROQ_API_KEY") or GROQ_API_KEY):
             return (
                 "AI chat is unavailable because GROQ_API_KEY is not set. "
-                "Add it to backend/.env or your environment."
+                "Set it in your environment, or in Render's Environment settings for the deployed app."
             )
         return (
             "AI chat is unavailable because the Groq SDK is not installed. "

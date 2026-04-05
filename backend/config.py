@@ -3,7 +3,13 @@ from pathlib import Path
 
 from dotenv import load_dotenv
 
-load_dotenv(Path(__file__).with_name(".env"))
+BASE_DIR = Path(__file__).resolve().parent.parent
+BACKEND_ENV_PATH = Path(__file__).with_name(".env")
+ROOT_ENV_PATH = BASE_DIR / ".env"
+
+# Prefer real environment variables, then allow local .env files for development.
+load_dotenv(ROOT_ENV_PATH)
+load_dotenv(BACKEND_ENV_PATH)
 
 GROQ_API_KEY = os.getenv("GROQ_API_KEY")
 
